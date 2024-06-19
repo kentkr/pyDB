@@ -1,0 +1,10 @@
+# package and runtime data
+pyDB/__pycache__/*
+history.txt
+pyDB.log
+pyDB.egg-info/*
+data/*
+
+# personal
+venv/*
+todo.txt

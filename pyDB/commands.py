@@ -44,25 +44,24 @@ class CreateTableCommand(Command):
         for token in self.tokens[7:]:
             #pdb.set_trace()
             if token.value == '(':
-                if row_count == 1:
-                    table_info['columns'] = new_data
-                    new_data = []
-                elif row_count > 1:
-                    table_info['rows'].append(new_data)
-                    new_data = []
                 row_count += 1
                 continue
             elif token.value == ',':
                 col_count += 1
                 continue
             elif token.value == ')':
+                if row_count == 1:
+                    table_info['columns'] = new_data
+                    new_data = []
+                elif row_count > 1:
+                    table_info['rows'].append(new_data)
+                    new_data = []
                 continue
             new_data.append(token.value)
         return table_info
 
     def execute(self) -> None:
         table_info = self._get_table_info()
-        print(table_info)
         with open(table_info['path'], 'w') as file:
             for i, col in enumerate(table_info['columns']):
                 file.write(col)
@@ -72,7 +71,7 @@ class CreateTableCommand(Command):
             for row in table_info['rows']:
                 for i, value in enumerate(row):
                     file.write(str(value))
-                    if i < len(table_info['rows'])-1:
+                    if i < len(row)-1:
                         file.write('|')
                 file.write('\n')
 
