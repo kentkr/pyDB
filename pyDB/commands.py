@@ -21,49 +21,61 @@ class CreateTableCommand(Command):
         super().__init__(raw_command)
         self.tokens = tokens
 
-    def _parse_tokens(self) -> Dict:
+    def _get_table_info(self) -> Dict:
         table_info = {}
         table_info['columns'] = []
-        table_info['data'] = [[]]
-        delim_counter = defaultdict(int)
+        table_info['rows'] = []
+        # verify create table command
         if len(self.tokens) < 1 or self.tokens[1].value != 'table':
             raise Exception(f'Expected keyword table!r after create. Instead got {self.tokens[1].value!r}')
-        for token in self.tokens[2:]:
-            print(token.token_type, token.value)
-            # if delim count, skip parentheses
-            if token.token_type == 'DELIMITER':
-                delim_counter[token.value] += 1
-                if token.value in ['(']:
-                    continue
-            # if column section (first parentheses)
-            if delim_counter['('] == 1:
-                if token.value == ',':
-                    continue
-                table_info['columns'].append(token.value)
-                if delim_counter[')'] == 1:
-                    continue
-            # if rows (rest of parentheses)
-            if delim_counter['('] > 1:
-                if token.token_type == 'DELIMITER':
-                             #pdb.set_trace()
-                    if token.value == ',':
-                        continue
-                    elif token.value == ')':
-                        table_info['data'].append([])
-                if token.token_type == 'DELIMITER':
-                    continue
-                elif token.token_type in ['IDENTIFIER', 'NUMBER']:
-                    table_info['data'][len(table_info['data'])-1].append(token.value)
-                else:
-                    raise Exception(f'Unexpected {token.token_type} of {token.value}')
-        table_info['data'].pop()
+        # get relation 
+        for i, token in enumerate(self.tokens[2:7]):
+            if i == 0:
+                table_info['db'] = token.value
+            if i == 2:
+                table_info['schema'] = token.value
+            if i == 4:
+                table_info['table'] = token.value
+        table_info['path'] = os.path.join(os.getcwd(), 'data', table_info['db'], table_info['schema'], table_info['table'])
+        # get cols and data
+        row_count = 0
+        col_count = 0
+        new_data = []
+        for token in self.tokens[7:]:
+            #pdb.set_trace()
+            if token.value == '(':
+                if row_count == 1:
+                    table_info['columns'] = new_data
+                    new_data = []
+                elif row_count > 1:
+                    table_info['rows'].append(new_data)
+                    new_data = []
+                row_count += 1
+                continue
+            elif token.value == ',':
+                col_count += 1
+                continue
+            elif token.value == ')':
+                continue
+            new_data.append(token.value)
         return table_info
 
     def execute(self) -> None:
-        print(self._parse_tokens())
-        pass
+        table_info = self._get_table_info()
+        print(table_info)
+        with open(table_info['path'], 'w') as file:
+            for i, col in enumerate(table_info['columns']):
+                file.write(col)
+                if i < len(table_info['columns'])-1:
+                    file.write('|')
+            file.write('\n')
+            for row in table_info['rows']:
+                for i, value in enumerate(row):
+                    file.write(str(value))
+                    if i < len(table_info['rows'])-1:
+                        file.write('|')
+                file.write('\n')
 
-        
 class SelectCommand(Command):
     def execute(self) -> None:
         print('select command!')
