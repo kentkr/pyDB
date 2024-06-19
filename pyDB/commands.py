@@ -41,23 +41,35 @@ class CreateTableCommand(Command):
         row_count = 0
         col_count = 0
         new_data = []
-        for token in self.tokens[7:]:
+        data_tokens = self.tokens[7:]
+        for i, token in enumerate(data_tokens):
             #pdb.set_trace()
+            # first token of new row, skip
             if token.value == '(':
                 row_count += 1
                 continue
+            # row delim, skip
             elif token.value == ',':
-                col_count += 1
+                # first value null or last value null
+                if data_tokens[i-1].value in ['(', ',']:
+                    new_data.append(None)
                 continue
+            # end of row, create col or append rows, clear data
             elif token.value == ')':
                 if row_count == 1:
                     table_info['columns'] = new_data
                     new_data = []
                 elif row_count > 1:
+                    if data_tokens[i-1].value == ',':
+                        new_data.append(None)
                     table_info['rows'].append(new_data)
                     new_data = []
                 continue
-            new_data.append(token.value)
+            # actual value, append to new data
+            else:
+                new_data.append(token.value)
+
+        print(table_info)
         return table_info
 
     def execute(self) -> None:
