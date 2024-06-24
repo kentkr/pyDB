@@ -8,10 +8,13 @@ taking courses, and adding complexity as I go.
 
 The first version will help me learn the basics, with no tutorials, all written 
 in python. It'll include:
-- A command line interface and REPL with pretty printing
+- A command line interface
+    - REPL with pretty printing
+    - command history
 - A tokenizer with `create table` and `select` commands
 - A CSV serializer/deserializer
 - Unit and integration tests
+- Error handling
 
 # Phase 2 - optimization
 

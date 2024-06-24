@@ -4,7 +4,7 @@ import logging
 import pdb
 import re
 import os
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, Iterable, List, Union
 from .tokenizer import Token, Tokenizer
 
 logger = logging.getLogger(__name__)
@@ -87,7 +87,7 @@ class CreateTableCommand(Command):
                 file.write('\n')
 
 class SelectCommand(Command):
-    def __init__(self, raw_command, tokens) -> None:
+    def __init__(self, raw_command: str, tokens: List) -> None:
         super().__init__(raw_command)
         self.tokens = tokens
 
@@ -108,7 +108,7 @@ class SelectCommand(Command):
         return [relation, columns]
 
     @staticmethod
-    def _read_data(relation, selected_columns) -> List:
+    def _read_data(relation: List[str], selected_columns: List[str]) -> List:
         path = os.path.join(os.getcwd(), 'data', relation[0], relation[1], relation[2])
         data = [selected_columns]
         with open(path, 'r') as file:
@@ -120,9 +120,33 @@ class SelectCommand(Command):
                 data.append([split_line[i] for i in col_indices])
         return data
 
+    def _pretty_print_result(self, data: List[List[object]]):
+        col_widths = []
+        # zip lists to traverse columns not rows
+        for col in zip(*data):
+            max_value = 0
+            for item in col:
+                max_value = max(max_value, len(str(item)))
+            col_widths.append(max_value)
+        
+        # using widths create row with values
+        def construct_row(items: Iterable):
+            return '| ' + ' | '.join(f'{str(item).ljust(width)}' for item, width in zip(items, col_widths)) + ' |'
+
+        # using widths create row '+' and '-'
+        border = '+-' + '-+-'.join('-' * width for width in col_widths) + '-+'
+
+        print(border)
+        print(construct_row(data[0]))
+        print(border)
+        for row in data[1:]:
+            print(construct_row(row))
+        print(border)
+        
     def execute(self) -> None:
         relation, selected_columns = self._parse_command()
-        print(self._read_data(relation, selected_columns))
+        data = self._read_data(relation, selected_columns)
+        self._pretty_print_result(data)
 
 
 class CommandExecutor:
