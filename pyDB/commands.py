@@ -69,7 +69,6 @@ class CreateTableCommand(Command):
             else:
                 new_data.append(token.value)
 
-        print(table_info)
         return table_info
 
     def execute(self) -> None:
@@ -88,9 +87,43 @@ class CreateTableCommand(Command):
                 file.write('\n')
 
 class SelectCommand(Command):
+    def __init__(self, raw_command, tokens) -> None:
+        super().__init__(raw_command)
+        self.tokens = tokens
+
+    def _parse_command(self):
+        columns = []
+        relation = []
+        current_keyword = 'select'
+        for token in self.tokens[1:]:
+            if token.token_type == 'DELIMITER':
+                continue
+            if token.token_type == 'KEYWORD':
+                current_keyword = token.value
+                continue
+            if current_keyword == 'select':
+                columns.append(token.value)
+            if current_keyword == 'from':
+                relation.append(token.value)
+        return [relation, columns]
+
+    @staticmethod
+    def _read_data(relation, selected_columns) -> List:
+        path = os.path.join(os.getcwd(), 'data', relation[0], relation[1], relation[2])
+        data = [selected_columns]
+        with open(path, 'r') as file:
+            lines = file.readlines()
+            columns = lines[0].strip().split('|')
+            col_indices = [i for i, col in enumerate(columns) if col in selected_columns]
+            for line in lines[1:]:
+                split_line = line.strip().split('|')
+                data.append([split_line[i] for i in col_indices])
+        return data
+
     def execute(self) -> None:
-        print('select command!')
-        pass
+        relation, selected_columns = self._parse_command()
+        print(self._read_data(relation, selected_columns))
+
 
 class CommandExecutor:
     def __init__(self, raw_command: str) -> None:
@@ -102,7 +135,7 @@ class CommandExecutor:
         if self.tokens[0].value == 'create':
             return CreateTableCommand(self.raw_command, self.tokens)
         if self.tokens[0].value == 'select':
-            return SelectCommand(self.raw_command)
+            return SelectCommand(self.raw_command, self.tokens)
         raise Exception('Invalid command. Must be one of create table or select')
 
     def execute(self) -> None:

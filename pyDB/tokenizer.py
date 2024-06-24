@@ -4,7 +4,7 @@ import re
 from typing import List, Tuple, Union
 from dataclasses import dataclass
 
-KEYWORDS = {'select', 'create', 'table'}
+KEYWORDS = {'select', 'create', 'from'}
 DELIMITERS = {',', ';', '(', ')', '.'}
 
 _token_specification = [
