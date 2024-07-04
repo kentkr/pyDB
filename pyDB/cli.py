@@ -2,7 +2,6 @@ import readline
 import logging
 from .commands import CommandExecutor
 
-
 logger = logging.getLogger(__name__)
 
 
