@@ -15,6 +15,7 @@ in python. It'll include:
 - A CSV serializer/deserializer
 - Unit and integration tests
 - Error handling
+- Logging
 
 # Phase 2 - optimization
 
