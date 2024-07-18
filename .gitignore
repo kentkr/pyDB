@@ -4,6 +4,7 @@ history.txt
 pyDB.log
 pyDB.egg-info/*
 data/*
+**.DS_Store
 
 # personal
 venv/*
