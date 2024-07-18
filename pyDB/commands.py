@@ -103,6 +103,9 @@ class SelectCommand(Command):
         with open(path, 'r') as file:
             lines = file.readlines()
             data_columns = lines[0].strip().split('|')
+            for col in column_names:
+                if col not in data_columns:
+                    raise Exception(f'Column {col} not found in data')
             col_indices = [i for i, col in enumerate(data_columns) if col in column_names]
             for line in lines[1:]:
                 split_line = line.strip().split('|')
