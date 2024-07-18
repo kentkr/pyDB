@@ -1,3 +1,7 @@
+from typing import List
+from tokenizer import Tokenizer, Token
+from ast_definitions import Column, Relation, SelectStatement
+from code import interact
 
 class Parser:
     def __init__(self, tokenizer: Tokenizer) -> None:
@@ -55,5 +59,3 @@ print(p.parse_select_statement())
 interact(local=locals())
 
 
-# bro break out the fucking white board and work
-# through an example. Keep it simple you can figure it out
