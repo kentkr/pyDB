@@ -1,3 +1,4 @@
+import pdb
 import readline
 import logging
 from .commands import CommandExecutor

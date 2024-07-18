@@ -1,11 +1,11 @@
 from typing import List
-from tokenizer import Tokenizer, Token
-from ast_definitions import Column, Relation, SelectStatement
+from .tokenizer import Token
+from .ast_definitions import Column, Relation, SelectStatement
 from code import interact
 
 class Parser:
-    def __init__(self, tokenizer: Tokenizer) -> None:
-        self.tokens = tokenizer.tokenize()
+    def __init__(self, tokens: List[Token]) -> None:
+        self.tokens = tokens
         self.position = 0
         self.current_token = self.tokens[self.position]
 
@@ -48,14 +48,4 @@ class Parser:
         self.expect('KEYWORD')
         relation = self.parse_relation()
         return SelectStatement(col_list, relation)
-
-
-query = 'select col1, col2 from db.table.schema;'
-
-t = Tokenizer(query)
-p = Parser(t)
-print(p.parse_select_statement())
-
-interact(local=locals())
-
 

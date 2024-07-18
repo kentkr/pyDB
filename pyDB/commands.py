@@ -5,7 +5,10 @@ import pdb
 import re
 import os
 from typing import Any, Dict, Iterable, List, Union
+
+from pyDB.ast_definitions import Column, Relation
 from .tokenizer import Token, Tokenizer
+from .parser import Parser
 
 logger = logging.getLogger(__name__)
 
@@ -90,31 +93,17 @@ class SelectCommand(Command):
     def __init__(self, raw_command: str, tokens: List) -> None:
         super().__init__(raw_command)
         self.tokens = tokens
-
-    def _parse_command(self):
-        columns = []
-        relation = []
-        current_keyword = 'select'
-        for token in self.tokens[1:]:
-            if token.token_type == 'DELIMITER':
-                continue
-            if token.token_type == 'KEYWORD':
-                current_keyword = token.value
-                continue
-            if current_keyword == 'select':
-                columns.append(token.value)
-            if current_keyword == 'from':
-                relation.append(token.value)
-        return [relation, columns]
+        self.selected_statement = Parser(tokens).parse_select_statement()
 
     @staticmethod
-    def _read_data(relation: List[str], selected_columns: List[str]) -> List:
-        path = os.path.join(os.getcwd(), 'data', relation[0], relation[1], relation[2])
-        data = [selected_columns]
+    def _read_data(relation: Relation, columns: List[Column]) -> List:
+        path = os.path.join(os.getcwd(), 'data', relation.db, relation.schema, relation.table)
+        column_names = [col.name for col in columns]
+        data = [column_names]
         with open(path, 'r') as file:
             lines = file.readlines()
-            columns = lines[0].strip().split('|')
-            col_indices = [i for i, col in enumerate(columns) if col in selected_columns]
+            data_columns = lines[0].strip().split('|')
+            col_indices = [i for i, col in enumerate(data_columns) if col in column_names]
             for line in lines[1:]:
                 split_line = line.strip().split('|')
                 data.append([split_line[i] for i in col_indices])
@@ -144,8 +133,9 @@ class SelectCommand(Command):
         print(border)
         
     def execute(self) -> None:
-        relation, selected_columns = self._parse_command()
-        data = self._read_data(relation, selected_columns)
+        relation = self.selected_statement.relation
+        columns = self.selected_statement.columns
+        data = self._read_data(relation, columns)
         self._pretty_print_result(data)
 
 
