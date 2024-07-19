@@ -1,7 +1,6 @@
 from typing import List
-from tokenizer import Token, Tokenizer
-from ast_definitions import Column, Relation, SelectStatement, Row, CreateTableStatement
-from code import interact
+from .tokenizer import Token
+from .ast_definitions import Column, Relation, SelectStatement, Row, CreateTableStatement
 
 class Parser:
     def __init__(self, tokens: List[Token]) -> None:
@@ -79,12 +78,10 @@ class CreateTableParser(Parser):
         return column_list
 
     def parse_row(self) -> Row:
-        print(self.current_token)
         self.expect('ENCLOSURE')
         row = []
         row.append(self.expect('STRING', 'NUMBER').value)
         while self.current_token.token_type == 'DELIMITER':
-            print(self.current_token)
             self.expect('DELIMITER')
             row.append(self.expect('STRING', 'NUMBER').value)
         self.expect('ENCLOSURE')

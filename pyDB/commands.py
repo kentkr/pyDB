@@ -1,14 +1,11 @@
 
-from collections import defaultdict
 import logging
-import pdb
-import re
 import os
-from typing import Any, Dict, Iterable, List, Union
+from typing import Iterable, List
 
 from pyDB.ast_definitions import Column, Relation
 from .tokenizer import Token, Tokenizer
-from .parser import Parser
+from .parser import SelectParser, CreateTableParser
 
 logger = logging.getLogger(__name__)
 
@@ -23,77 +20,34 @@ class CreateTableCommand(Command):
     def __init__(self, raw_command: str, tokens: List[Token]) -> None:
         super().__init__(raw_command)
         self.tokens = tokens
+        self.create_table_statement = CreateTableParser(tokens).parse_create_table()
 
-    def _get_table_info(self) -> Dict:
-        table_info = {}
-        table_info['columns'] = []
-        table_info['rows'] = []
-        # verify create table command
-        if len(self.tokens) < 1 or self.tokens[1].value != 'table':
-            raise Exception(f'Expected keyword table!r after create. Instead got {self.tokens[1].value!r}')
-        # get relation 
-        for i, token in enumerate(self.tokens[2:7]):
-            if i == 0:
-                table_info['db'] = token.value
-            if i == 2:
-                table_info['schema'] = token.value
-            if i == 4:
-                table_info['table'] = token.value
-        table_info['path'] = os.path.join(os.getcwd(), 'data', table_info['db'], table_info['schema'], table_info['table'])
-        # get cols and data
-        row_count = 0
-        col_count = 0
-        new_data = []
-        data_tokens = self.tokens[7:]
-        for i, token in enumerate(data_tokens):
-            #pdb.set_trace()
-            # first token of new row, skip
-            if token.value == '(':
-                row_count += 1
-                continue
-            # row delim, skip
-            elif token.value == ',':
-                # first value null or last value null
-                if data_tokens[i-1].value in ['(', ',']:
-                    new_data.append(None)
-                continue
-            # end of row, create col or append rows, clear data
-            elif token.value == ')':
-                if row_count == 1:
-                    table_info['columns'] = new_data
-                    new_data = []
-                elif row_count > 1:
-                    if data_tokens[i-1].value == ',':
-                        new_data.append(None)
-                    table_info['rows'].append(new_data)
-                    new_data = []
-                continue
-            # actual value, append to new data
-            else:
-                new_data.append(token.value)
-
-        return table_info
+    def _get_table_path(self) -> str:
+        relation = self.create_table_statement.relation
+        return os.path.join('/Users/kylekent/Desktop/pyDB/data', relation.db, relation.schema, relation.table)
 
     def execute(self) -> None:
-        table_info = self._get_table_info()
-        with open(table_info['path'], 'w') as file:
-            for i, col in enumerate(table_info['columns']):
-                file.write(col)
-                if i < len(table_info['columns'])-1:
+        path = self._get_table_path()
+        columns = self.create_table_statement.column_list
+        rows = self.create_table_statement.rows
+        with open(path, 'w') as file:
+            for i, col in enumerate(columns):
+                file.write(col.name)
+                if i < len(columns)-1:
                     file.write('|')
             file.write('\n')
-            for row in table_info['rows']:
-                for i, value in enumerate(row):
+            for row in rows:
+                for i, value in enumerate(row.values):
                     file.write(str(value))
-                    if i < len(row)-1:
+                    if i < len(row.values)-1:
                         file.write('|')
                 file.write('\n')
 
 class SelectCommand(Command):
-    def __init__(self, raw_command: str, tokens: List) -> None:
+    def __init__(self, raw_command: str, tokens: List[Token]) -> None:
         super().__init__(raw_command)
         self.tokens = tokens
-        self.selected_statement = Parser(tokens).parse_select_statement()
+        self.selected_statement = SelectParser(tokens).parse_select_statement()
 
     @staticmethod
     def _read_data(relation: Relation, columns: List[Column]) -> List:

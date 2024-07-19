@@ -1,7 +1,6 @@
 
-from code import interact
 import re
-from typing import List, Tuple, Union
+from typing import List, Union
 from dataclasses import dataclass
 
 KEYWORDS = {'select', 'from', 'create'}
