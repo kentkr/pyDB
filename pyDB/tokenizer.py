@@ -1,16 +1,16 @@
 
-from code import interact
 import re
-from typing import List, Tuple, Union
+from typing import List, Union
 from dataclasses import dataclass
 
-KEYWORDS = {'select', 'from'}
+KEYWORDS = {'select', 'from', 'create'}
 DELIMITERS = {',', '.'}
 EOF = ';'
-ENCLOSURES = {'(', ')', '\'', '\"'}
+ENCLOSURES = {'(', ')'}
 
 _token_specification = [
         ('NUMBER',    r'\d+(\.\d*)?'),
+        ('STRING',    r'\'.*\'|\".*?\"'),
         ('IDENTIFIER', r'[A-Za-z_]\w*'),
         ('DELIMITER', r'|'.join(re.escape(delim) for delim in DELIMITERS)),
         ('ENCLOSURE', r'|'.join(re.escape(e) for e in ENCLOSURES)),

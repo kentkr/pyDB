@@ -1,4 +1,3 @@
-import pdb
 import readline
 import logging
 from .commands import CommandExecutor
@@ -10,17 +9,14 @@ class Input:
     def __init__(self) -> None:
         self.history = self.load_history()
 
-
     def load_history(self) -> None:
         try:
             readline.read_history_file('history.txt')
         except FileNotFoundError:
             pass
 
-
     def save_history(self) -> None:
         readline.write_history_file('history.txt')
-
 
     def receive_input(self) -> None:
         user_input = ''
@@ -43,10 +39,8 @@ class Input:
             if isinstance(e, EOFError):
                 self.save_history()
 
-
 def main():
     logging.basicConfig(filename='pyDB.log', level=logging.INFO, format='[%(levelname)s]%(asctime)s::%(name)s %(message)s')
-
     logger.info('pyDB entry')
     Input().receive_input()
     logger.info('pyDB exit')

@@ -1,7 +1,6 @@
 from typing import List
 from .tokenizer import Token
-from .ast_definitions import Column, Relation, SelectStatement
-from code import interact
+from .ast_definitions import Column, Relation, SelectStatement, Row, CreateTableStatement
 
 class Parser:
     def __init__(self, tokens: List[Token]) -> None:
@@ -13,13 +12,18 @@ class Parser:
         self.position += 1
         self.current_token = self.tokens[self.position]
 
-    def expect(self, token_type: str) -> Token:
-        if self.current_token.token_type == token_type:
+    def expect(self, *token_type: str) -> Token:
+        if self.current_token.token_type in token_type:
             token = self.current_token
             self.walk()
             return token
         else:
-            raise Exception(f'Expected {token_type} got {self.current_token.token_type}')
+            raise Exception(f'Expected {token_type} got {self.current_token.token_type} of {self.current_token.value!r}')
+
+
+class SelectParser(Parser):
+    def __init__(self, tokens: List[Token]) -> None:
+        super().__init__(tokens)
 
     def parse_column(self) -> Column:
         token = self.expect('IDENTIFIER')
@@ -48,4 +52,46 @@ class Parser:
         self.expect('KEYWORD')
         relation = self.parse_relation()
         return SelectStatement(col_list, relation)
+
+class CreateTableParser(Parser):
+    def __init__(self, tokens: List[Token]) -> None:
+        super().__init__(tokens)
+
+    def parse_relation(self) -> Relation:
+        self.expect('KEYWORD') # create
+        self.expect('IDENTIFIER') # table
+        db = self.expect('IDENTIFIER').value
+        self.expect('DELIMITER')
+        schema = self.expect('IDENTIFIER').value
+        self.expect('DELIMITER')
+        table = self.expect('IDENTIFIER').value
+        return Relation(db, schema, table)
+
+    def parse_column_list(self) -> List[Column]:
+        self.expect('ENCLOSURE')
+        column_list = []
+        column_list.append(Column(self.expect('IDENTIFIER').value))
+        while self.current_token.token_type == 'DELIMITER':
+            self.expect('DELIMITER')
+            column_list.append(Column(self.expect('IDENTIFIER').value))
+        self.expect('ENCLOSURE')
+        return column_list
+
+    def parse_row(self) -> Row:
+        self.expect('ENCLOSURE')
+        row = []
+        row.append(self.expect('STRING', 'NUMBER').value)
+        while self.current_token.token_type == 'DELIMITER':
+            self.expect('DELIMITER')
+            row.append(self.expect('STRING', 'NUMBER').value)
+        self.expect('ENCLOSURE')
+        return Row(row)
+
+    def parse_create_table(self) -> CreateTableStatement:
+        relation = self.parse_relation()
+        column_list = self.parse_column_list()
+        rows = []
+        while self.current_token.token_type != 'EOF' and self.current_token.token_type == 'ENCLOSURE':
+            rows.append(self.parse_row())
+        return CreateTableStatement(relation, column_list, rows)
 
