@@ -4,7 +4,7 @@ import re
 from typing import List, Tuple, Union
 from dataclasses import dataclass
 
-KEYWORDS = {'select', 'from'}
+KEYWORDS = {'select', 'from', 'create'}
 DELIMITERS = {',', '.'}
 EOF = ';'
 ENCLOSURES = {'(', ')', '\'', '\"'}
