@@ -21,11 +21,11 @@ class ASTNode:
         return self.__str__()
 
 class Column(ASTNode):
-    def __init__(self, name):
+    def __init__(self, name: str) -> None:
         self.name = name
 
 class Relation(ASTNode):
-    def __init__(self, db, schema, table):
+    def __init__(self, db: str, schema: str, table: str) -> None:
         self.db = db
         self.schema = schema
         self.table = table

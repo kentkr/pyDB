@@ -59,20 +59,30 @@ class CreateParser(Parser):
         super().__init__(tokens)
 
     def parse_relation(self) -> Relation:
-        self.expect('KEYWORD')
-        self.expect('IDENTIFIER')
-        print(self.current_token)
+        self.expect('KEYWORD') # create
+        self.expect('IDENTIFIER') # table
         db = self.expect('IDENTIFIER').value
         self.expect('DELIMITER')
-        print(self.current_token)
         schema = self.expect('IDENTIFIER').value
         self.expect('DELIMITER')
         table = self.expect('IDENTIFIER').value
         return Relation(db, schema, table)
 
-query = 'create table db.schema.table (a, b)(1, 2)'
-p = CreateParser(Tokenizer(query).tokenize())
+    def parse_column_list(self) -> List[Column]:
+        self.expect('ENCLOSURE')
+        column_list = []
+        column_list.append(Column(self.expect('IDENTIFIER').value))
+        while self.current_token.token_type == 'DELIMITER':
+            self.expect('DELIMITER')
+            column_list.append(Column(self.expect('IDENTIFIER').value))
+        return column_list
+
+
+query = 'create table db.schema.table (a, b)("hi there", "man")'
+t = Tokenizer(query).tokenize()
+p = CreateParser(t)
 r = p.parse_relation()
+c = p.parse_column_list()
 
 interact(local=locals())
 
