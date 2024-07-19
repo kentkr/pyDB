@@ -1,6 +1,6 @@
 from typing import List
 from tokenizer import Token, Tokenizer
-from ast_definitions import Column, Relation, SelectStatement
+from ast_definitions import Column, Relation, SelectStatement, Row, CreateTableStatement
 from code import interact
 
 class Parser:
@@ -13,13 +13,13 @@ class Parser:
         self.position += 1
         self.current_token = self.tokens[self.position]
 
-    def expect(self, token_type: str) -> Token:
-        if self.current_token.token_type == token_type:
+    def expect(self, *token_type: str) -> Token:
+        if self.current_token.token_type in token_type:
             token = self.current_token
             self.walk()
             return token
         else:
-            raise Exception(f'Expected {token_type} got {self.current_token.token_type} of {self.current_token.value}')
+            raise Exception(f'Expected {token_type} got {self.current_token.token_type} of {self.current_token.value!r}')
 
 
 class SelectParser(Parser):
@@ -54,7 +54,7 @@ class SelectParser(Parser):
         relation = self.parse_relation()
         return SelectStatement(col_list, relation)
 
-class CreateParser(Parser):
+class CreateTableParser(Parser):
     def __init__(self, tokens: List[Token]) -> None:
         super().__init__(tokens)
 
@@ -75,15 +75,26 @@ class CreateParser(Parser):
         while self.current_token.token_type == 'DELIMITER':
             self.expect('DELIMITER')
             column_list.append(Column(self.expect('IDENTIFIER').value))
+        self.expect('ENCLOSURE')
         return column_list
 
+    def parse_row(self) -> Row:
+        print(self.current_token)
+        self.expect('ENCLOSURE')
+        row = []
+        row.append(self.expect('STRING', 'NUMBER').value)
+        while self.current_token.token_type == 'DELIMITER':
+            print(self.current_token)
+            self.expect('DELIMITER')
+            row.append(self.expect('STRING', 'NUMBER').value)
+        self.expect('ENCLOSURE')
+        return Row(row)
 
-query = 'create table db.schema.table (a, b)("hi there", "man")'
-t = Tokenizer(query).tokenize()
-p = CreateParser(t)
-r = p.parse_relation()
-c = p.parse_column_list()
-
-interact(local=locals())
-
+    def parse_create_table(self) -> CreateTableStatement:
+        relation = self.parse_relation()
+        column_list = self.parse_column_list()
+        rows = []
+        while self.current_token.token_type != 'EOF' and self.current_token.token_type == 'ENCLOSURE':
+            rows.append(self.parse_row())
+        return CreateTableStatement(relation, column_list, rows)
 

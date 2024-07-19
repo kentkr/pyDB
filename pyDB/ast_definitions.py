@@ -1,6 +1,6 @@
 
 
-from typing import List
+from typing import List, Any
 
 class ASTNode:
     def __str__(self) -> str:
@@ -24,6 +24,10 @@ class Column(ASTNode):
     def __init__(self, name: str) -> None:
         self.name = name
 
+class Row(ASTNode):
+    def __init__(self, values: List[Any]) -> None:
+        self.values = values
+
 class Relation(ASTNode):
     def __init__(self, db: str, schema: str, table: str) -> None:
         self.db = db
@@ -36,3 +40,9 @@ class SelectStatement(ASTNode):
         self.columns = columns
         self.relation = relation
 
+class CreateTableStatement(ASTNode):
+    def __init__(self, relation: Relation, column_list: List[Column], rows: List[Row]) -> None:
+        super().__init__()
+        self.relation = relation
+        self.column_list = column_list
+        self.rows = rows
