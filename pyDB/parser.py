@@ -1,6 +1,8 @@
 from typing import List
-from .tokenizer import Token
-from .ast_definitions import Column, Relation, SelectStatement, Row, CreateTableStatement
+
+from pyDB.exceptions import UnexpectedToken
+from pyDB.tokenizer import Token
+from pyDB.ast_definitions import Column, Relation, SelectStatement, Row, CreateTableStatement
 
 class Parser:
     def __init__(self, tokens: List[Token]) -> None:
@@ -18,7 +20,7 @@ class Parser:
             self.walk()
             return token
         else:
-            raise Exception(f'Expected {token_type} got {self.current_token.token_type} of {self.current_token.value!r}')
+            raise UnexpectedToken(token_type, self.current_token)
 
 
 class SelectParser(Parser):
