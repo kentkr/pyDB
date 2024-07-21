@@ -4,8 +4,9 @@ import os
 from typing import Iterable, List
 
 from pyDB.ast_definitions import Column, Relation
-from .tokenizer import Token, Tokenizer
-from .parser import SelectParser, CreateTableParser
+from pyDB.exceptions import ColumnNotFound, InvalidCommand, RelationNotFound
+from pyDB.tokenizer import Token, Tokenizer
+from pyDB.parser import SelectParser, CreateTableParser
 
 logger = logging.getLogger(__name__)
 
@@ -52,6 +53,8 @@ class SelectCommand(Command):
     @staticmethod
     def _read_data(relation: Relation, columns: List[Column]) -> List:
         path = os.path.join(os.getcwd(), 'data', relation.db, relation.schema, relation.table)
+        if not os.path.exists(path):
+            raise RelationNotFound(f'Table relation not found')
         column_names = [col.name for col in columns]
         data = [column_names]
         with open(path, 'r') as file:
@@ -59,7 +62,7 @@ class SelectCommand(Command):
             data_columns = lines[0].strip().split('|')
             for col in column_names:
                 if col not in data_columns:
-                    raise Exception(f'Column {col} not found in data')
+                    raise ColumnNotFound(f'Column {col} not found in data')
             col_indices = [i for i, col in enumerate(data_columns) if col in column_names]
             for line in lines[1:]:
                 split_line = line.strip().split('|')
@@ -107,7 +110,7 @@ class CommandExecutor:
             return CreateTableCommand(self.raw_command, self.tokens)
         if self.tokens[0].value == 'select':
             return SelectCommand(self.raw_command, self.tokens)
-        raise Exception('Invalid command. Must be one of create table or select')
+        raise InvalidCommand('Invalid command. Must be one of create table or select')
 
     def execute(self) -> None:
         self.command.execute()

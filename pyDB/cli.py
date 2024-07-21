@@ -1,6 +1,6 @@
 import readline
 import logging
-from .commands import CommandExecutor
+from pyDB.commands import CommandExecutor
 
 logger = logging.getLogger(__name__)
 
@@ -32,12 +32,16 @@ class Input:
                     readline.add_history(user_input.strip())
                     CommandExecutor(user_input).execute()
                     user_input = ''
-        except (KeyboardInterrupt, EOFError) as e:
+        except (Exception, KeyboardInterrupt, EOFError) as e:
             if isinstance(e, KeyboardInterrupt):
                 print('\n')
                 self.receive_input()
-            if isinstance(e, EOFError):
+            elif isinstance(e, EOFError):
                 self.save_history()
+            else:
+                self.save_history()
+                print(e)
+                self.receive_input()
 
 def main():
     logging.basicConfig(filename='pyDB.log', level=logging.INFO, format='[%(levelname)s]%(asctime)s::%(name)s %(message)s')
