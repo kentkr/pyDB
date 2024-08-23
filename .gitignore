@@ -1,5 +1,5 @@
 # package and runtime data
-pyDB/__pycache__/*
+*__pycache__*
 history.txt
 pyDB.log
 pyDB.egg-info/*
