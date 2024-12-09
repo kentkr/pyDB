@@ -30,14 +30,15 @@ on databases. The optimizations are TBD based on what I learn. They may include
     - Aggregate functions
     - Where clauses
 
-# Phase 3 - ~~rustify~~c++-ify
+# Phase 3 - ~~rustify~~ c++-ify
 
 Python is not the optimal language for a database. So pyDB will either be rewritten
 in rust or C++. That's it!
 
 Edit: I ended up following all the assignments for the CMU course listed above.
 It included creating a copy-on-write trie, a buffer pool manager, a b+ tree, 
-a query optimizer, and concurrency controls.
+a query optimizer, and concurrency controls. I did not make the repo public
+to respect the wishes of the instructors of that course.
 
 # Phase 4 - conquer the world?
 
